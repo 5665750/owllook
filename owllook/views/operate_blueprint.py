@@ -35,7 +35,7 @@ def close_connection(operate_bp, loop):
 
 # jinjia2 config
 env = Environment(
-    loader=PackageLoader('views.operate_blueprint', '../templates/operate'),
+    loader=PackageLoader('owllook.views.operate_blueprint', '../templates/operate'),
     autoescape=select_autoescape(['html', 'xml', 'tpl']))
 
 
@@ -377,7 +377,7 @@ async def owllook_register(request):
     email = register_data.get('email', [None])[0]
     answer = register_data.get('answer', [None])[0]
     reg_index = request.cookies.get('reg_index')
-    if user and pwd and email and answer and reg_index and len(user) > 5:
+    if user and pwd and email and answer and reg_index and len(user) > 2 and len(pwd) > 5:
         motor_db = motor_base.get_db()
         is_exist = await motor_db.user.find_one({'user': user})
         if not is_exist:

@@ -8,7 +8,7 @@ import aiohttp
 import async_timeout
 
 from bs4 import BeautifulSoup
-from aiocache.serializers import PickleSerializer,JsonSerializer
+from aiocache.serializers import PickleSerializer, JsonSerializer
 
 from urllib.parse import urlparse, parse_qs, urljoin
 
@@ -20,11 +20,13 @@ from owllook.config import RULES, LATEST_RULES, LOGGER
 
 
 @cached(ttl=300, key_from_attr='url', serializer=PickleSerializer(), namespace="main")
-async def cache_owllook_novels_content(url, netloc):
+async def cache_owllook_novels_content(url, chapter_url,netloc):
     headers = {
         'user-agent': await get_random_user_agent()
     }
     html = await target_fetch(headers=headers, url=url)
+    if not html:
+        html = get_html_by_requests(url=url, headers=headers)
     if html:
         soup = BeautifulSoup(html, 'html5lib')
         selector = RULES[netloc].content_selector
@@ -49,7 +51,7 @@ async def cache_owllook_novels_content(url, netloc):
             #     title = title.split('_')[0]
             # elif "-" in title:
             #     title = title.split('-')[0]
-            next_chapter = extract_pre_next_chapter(chapter_url=url, html=str(soup))
+            next_chapter = extract_pre_next_chapter(url=url, chapter_url=chapter_url, html=str(soup))
             content = [str(i) for i in content]
             data = {
                 'content': str(''.join(content)),
@@ -62,12 +64,14 @@ async def cache_owllook_novels_content(url, netloc):
     return None
 
 
-# @cached(ttl=300, key_from_attr='url', serializer=PickleSerializer(), namespace="main")
+@cached(ttl=300, key_from_attr='url', serializer=PickleSerializer(), namespace="main")
 async def cache_owllook_novels_chapter(url, netloc):
     headers = {
         'user-agent': await get_random_user_agent()
     }
     html = await target_fetch(headers=headers, url=url)
+    if not html:
+        html = get_html_by_requests(url=url, headers=headers)
     if html:
         soup = BeautifulSoup(html, 'html5lib')
         selector = RULES[netloc].chapter_selector

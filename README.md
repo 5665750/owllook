@@ -1,12 +1,15 @@
 ## owllook - 在线小说搜索引擎
 
-[![Build Status](https://travis-ci.org/howie6879/owllook.svg?branch=master)](https://travis-ci.org/howie6879/owllook) [![Python3.6+](https://img.shields.io/badge/python-3.6%2B-orange.svg)](https://github.com/howie6879/owllook) [![license](https://img.shields.io/github/license/howie6879/owllook.svg)](https://github.com/howie6879/owllook)
+ [![Python3.6+](https://img.shields.io/badge/python-3.6%2B-orange.svg)](https://github.com/howie6879/owllook) [![license](https://img.shields.io/github/license/howie6879/owllook.svg)](https://github.com/howie6879/owllook)
 
 `owllook`是一个基于其他搜索引擎构建的垂直小说搜索引擎，owllook目的是让阅读更简单、优雅，让每位读者都有舒适的阅读体验，如**搜书、阅读、收藏、追更、推荐等功能**：
 
-- 演示网址：[https://www.owllook.net/](https://www.owllook.net/)
-- 公众号：[**粮草小说**](http://oe7yjec8x.bkt.clouddn.com/howie/2018-03-13-%E7%B2%AE%E8%8D%89%E5%B0%8F%E8%AF%B4.jpg-blog.howie)，有兴趣的话可以关注下
-- 博客介绍：[https://www.howie6879.cn/post/22/](https://www.howie6879.cn/post/22/)
+- ~~演示网址（不维护了，有兴趣自己搭建）~~：[https://www.owllook.net/](https://www.owllook.net/)
+- 公众号：[**粮草小说**](https://www.owllook.net/static/novels/img/lcxs_show.jpg)，有兴趣的话可以关注下
+- 详细安装介绍：[详细安装介绍](https://mp.weixin.qq.com/s/0CqLiKsyDQ-pVmeo3R-UlA)
+- 个人公众号：[老胡的储物柜](https://raw.githubusercontent.com/howie6879/howie6879.github.io/img/pictures/20190529083905.png)
+
+<div align=center><img src="https://cdn.jsdelivr.net/gh/howie6879/weekly/src/statics/wechat.jpeg"  width="85%" alt="img" /></div>
 
 衍生项目：
 
@@ -24,7 +27,7 @@
 
 目前采用的是直接在搜索引擎上进行结果检索，我尽量写少量的规则来完成解析，具体见[规则定义](./docs/规则定义.md)，遇到自己喜欢的小说网站，你也可以自己添加解析，`owllook`目前解析了超过 **200+** 网站，追更网站解析了**50+**
 
-有一些地方需要用到爬虫，比如说排行榜，一些书籍信息等，我不想动用重量级爬虫框架来写，于是我在owllook里面编写了一个很轻量的爬虫框架来做这件事，见 **[aspider](https://github.com/howie6879/aspider)**
+有一些地方需要用到爬虫，比如说排行榜，一些书籍信息等，我不想动用重量级爬虫框架来写，于是我在owllook里面编写了一个很轻量的爬虫框架来做这件事，见 **[ruia](https://github.com/howie6879/ruia)**
 
 BTW，sanic写界面确实不是很方便，至于为什么写这个，一是想利用`sanic`尽量做成异步服务，二是想就此练习下推荐系统，顺便作为毕业设计
 
@@ -39,40 +42,25 @@ mongo以及redis装好后，进入项目目录，依照步骤执行：
 git clone https://github.com/howie6879/owllook
 cd owllook
 pip install pipenv
-pipenv install --python /Users/howie/anaconda3/envs/python36/bin/python3.6
+# 请先提前创建好Python3.6环境
+pipenv install --python /Users/howie/anaconda3/envs/python36/bin/python3.6 --skip-lock
 # 进入虚拟环境
 pipenv shell
+
+# 先配置好相关数据库配置，具体看`config/dev_config.py`
 
 # 方案一
 # 运行：
 cd owllook
-python server.py
-# 或者
-gunicorn --bind 127.0.0.1:8001 --worker-class sanic.worker.GunicornWorker server:app
+pipenv run gunicorn -c owllook/config/gunicorn.py --worker-class sanic.worker.GunicornWorker owllook.server:app
 
 # 方案二 推荐 
-# 直接下载镜像
-docker pull howie6879/owllook
-# 创建dev_owllook.env文件
-vim dev_owllook.env
-# 写入一些环境变量
-# start ===============
-# 需要设置就填写  不需要就删掉
-MODE=DEV
-REDIS_ENDPOINT= ip
-REDIS_PORT= port
-REDIS_PASSWORD=''
-MONGO_HOST= ip
-MONGO_PORT= port
-MONGO_USERNAME=''
-MONGO_PASSWORD=''
-# end ===============
-# 运行 在dev_owllook.env里面填上数据库配置 数据库ip需要注意 请将连接ip设置为ifconfig显示的ip
-docker run --env-file ./dev_owllook.env -d -p 8001:8001 howie6879/owllook:latest
-# 也可以自己打包
-docker build -t owllook:0.1 .
-# 运行
-docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
+# 安装docker并打包镜像
+docker build -t howie6879/owllook .
+# 实际运行
+docker-compose up -d
+# 退出
+docker-compose down
 ```
 
 #### Features
@@ -96,7 +84,7 @@ docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
 - 搜索排行
 - 章节异步加载 感谢@[mscststs](https://github.com/mscststs)
 - 排行榜 - 起点+owllook
-- 自带爬虫框架，统一爬虫规范，对爬虫感兴趣的可以看看 - [aspider](https://github.com/howie6879/aspider)
+- 自带爬虫框架，统一爬虫规范，对爬虫感兴趣的可以看看 - [ruia](https://github.com/howie6879/ruia)
 
 #### TODO
 
@@ -107,9 +95,17 @@ docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
 
 ### Screenshots
 
-下面是一些截图展示，具体效果图请看[这里](http://oe7yjec8x.bkt.clouddn.com/howie/2017-03-08-owllook.gif)：
+首页:
 
-2017-07-29更新
+![](https://ws1.sinaimg.cn/large/007i3XCUgy1fynmmhyim2j31hc0r140i.jpg)
+
+搜索：
+
+![](https://ws1.sinaimg.cn/large/007i3XCUgy1fynmkbqzf3j31h70qz42y.jpg)
+
+榜单：
+
+![](https://ws1.sinaimg.cn/large/007i3XCUgy1fynmdwg8tpj31gv0qt42e.jpg)
 
 书架：
 
@@ -118,8 +114,6 @@ docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
 目录解析页：
 
 ![demo](./docs/imgs/chapter.png)
-
-
 
 阅读：
 
@@ -130,6 +124,17 @@ docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
 **为什么首页榜单为空白？**
 
 这个是根据小说搜索次数显示的，每天刷新一次，使用多了就会有
+
+**为什么会出现302跳转？**
+
+为了防止直接运行服务被恶意域名绑定，所以作出如下修改：
+
+```shell
+vim config/config.py
+# 将 true 改为 false
+VAL_HOST = os.getenv('VAL_HOST', 'true')
+VAL_HOST = os.getenv('VAL_HOST', 'false')
+```
 
 **小说榜单页面为什么没有内容？**
 
@@ -166,7 +171,9 @@ docker run --env-file ./dev_owllook.env -d -p 8001:8001 owllook:0.1
 
 **捐赠：**
 
-<img src="http://oe7yjec8x.bkt.clouddn.com/howie/2017-01-25-wx.png" width = "400" height = "400" alt="donate" align=center />
+> 美酒加咖啡，我只要喝一杯～
+
+<img src="https://raw.githubusercontent.com/howie6879/howie6879.github.io/img/pictures/20190904201512.png" width = "400" height = "400" alt="donate" align=center />
 
 
 感谢以下捐赠者，具体见[捐赠名单](./DONATE.md) ^_^

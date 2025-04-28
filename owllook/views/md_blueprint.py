@@ -26,7 +26,7 @@ def close_connection(rank_bp, loop):
 
 # jinjia2 config
 env = Environment(
-    loader=PackageLoader('views.md_blueprint', '../templates/md'),
+    loader=PackageLoader('owllook.views.md_blueprint', '../templates/md'),
     autoescape=select_autoescape(['html', 'xml', 'tpl']))
 
 
@@ -332,7 +332,6 @@ async def zongheng(request):
     else:
         return redirect('zongheng')
     search_ranking = await cache_others_search_ranking(spider='zongheng', novel_type=novels_type)
-    print(search_ranking)
     title = "owllook - 纵横小说人气榜单"
     if user:
         return template('index.html',

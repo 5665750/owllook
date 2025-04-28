@@ -4,15 +4,22 @@
 """
 
 import os
-import schedule
+import asyncio
 import sys
 import time
 
-# os.environ['MODE'] = 'PRO'
+import schedule
+import uvloop
+
+os.environ['MODE'] = 'PRO'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from owllook.config import CONFIG
 from owllook.spiders import QidianRankingSpider, ZHRankingSpider
+from owllook.fetcher.cache import update_all_books
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+loop = asyncio.get_event_loop()
 
 
 def start_spider():
@@ -20,8 +27,15 @@ def start_spider():
     ZHRankingSpider.start()
 
 
-def refresh_task(spider_interval):
-    schedule.every(spider_interval).minutes.do(start_spider)
+def update_all_books_schedule():
+    task = asyncio.ensure_future(update_all_books(loop))
+    loop.run_until_complete(task)
+    return task.result() or None
+
+
+def refresh_task():
+    schedule.every(CONFIG.SCHEDULED_DICT['SPIDER_INTERVAL']).minutes.do(start_spider)
+    # schedule.every(CONFIG.SCHEDULED_DICT['NOVELS_INTERVAL']).minutes.do(update_all_books_schedule)
 
     while True:
         schedule.run_pending()
@@ -29,5 +43,5 @@ def refresh_task(spider_interval):
 
 
 if __name__ == '__main__':
-    spider_interval = CONFIG.SCHEDULED_DICT['SPIDER_INTERVAL']
-    refresh_task(spider_interval=spider_interval)
+    start_spider()
+    refresh_task()

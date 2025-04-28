@@ -31,7 +31,7 @@ def close_connection(novels_bp, loop):
 
 # jinjia2 config
 env = Environment(
-    loader=PackageLoader('views.novels_blueprint', '../templates/novels'),
+    loader=PackageLoader('owllook.views.novels_blueprint', '../templates/novels'),
     autoescape=select_autoescape(['html', 'xml', 'tpl']))
 
 
@@ -124,7 +124,7 @@ async def owllook_content(request):
                     {'$set': {'books_url.$.last_read_url': latest_read}})
         return redirect(book_url)
     content_url = RULES[netloc].content_url
-    content_data = await cache_owllook_novels_content(url=url, netloc=netloc)
+    content_data = await cache_owllook_novels_content(url=url, chapter_url=chapter_url,netloc=netloc)
     if content_data:
         try:
             content = content_data.get('content', '获取失败')
@@ -140,7 +140,8 @@ async def owllook_content(request):
                 novels_name=novels_name
             )
             # 破坏广告链接
-            content = str(content).strip('[]Jjs,').replace('http', 'hs')
+            content = str(content).strip('[]Jjs,').replace('http', 'hs').replace('.js', '').replace('();', '')
+            content += """欢迎关注公众号【粮草小说】，享受精品书籍推荐以及实体书赠送福利！"""
             if user:
                 bookmark = await motor_db.user_message.find_one({'user': user, 'bookmarks.bookmark': bookmark_url})
                 book = await motor_db.user_message.find_one({'user': user, 'books_url.book_url': book_url})
